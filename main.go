@@ -7,10 +7,17 @@ import (
 )
 
 func main() {
-	conf, err := config.Read(".gatorconfig.json")
+	conf, err := config.Read()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	conf.SetUser("Chase Lamoureux")
+
+	conf, err = config.Read()
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(conf.DB_URL)
+	fmt.Println(conf.Username)
 }

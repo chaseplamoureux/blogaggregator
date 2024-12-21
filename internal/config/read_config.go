@@ -4,15 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
-func Read(filename string) (Config, error) {
+const ConfigFileName = ".gatorconfig.json"
+
+func getConfigFilePath() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return Config{}, fmt.Errorf("Error locating home directory", err)
+		fmt.Println(err)
 	}
+	path := filepath.Join(home, ConfigFileName)
+	return path
 
-	configFileData, err := os.ReadFile(home + "/" + filename)
+}
+
+func Read() (Config, error) {
+	path := getConfigFilePath()
+	configFileData, err := os.ReadFile(path)
 	if err != nil {
 		return Config{}, fmt.Errorf("Error reading gatorconfig file", err)
 	}
@@ -25,4 +34,26 @@ func Read(filename string) (Config, error) {
 	}
 
 	return gatorConfig, nil
+}
+
+func (conf *Config) SetUser(username string) {
+	conf.Username = username
+	err := write(*conf)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func write(conf Config) error {
+	data, err := json.Marshal(conf)
+	if err != nil {
+		return fmt.Errorf("error parsing config to json", err)
+	}
+
+	path := getConfigFilePath()
+	err = os.WriteFile(path, data, 0644)
+	if err != nil {
+		return fmt.Errorf("error writing file", err)
+	}
+	return nil
 }
