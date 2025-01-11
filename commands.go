@@ -41,7 +41,14 @@ func handlerLogin(s *state, cmd command) error {
 	if len(cmd.commandArgs) == 0 {
 		return errors.New("No username was provided")
 	}
+
 	username := cmd.commandArgs[0]
+	_, err := s.dbConn.GetUser(context.Background(), username)
+	if err != nil {
+		fmt.Printf("User does not exist: %v\n", err)
+		os.Exit(1)
+	}
+
 	s.ConfPointer.SetUser(username)
 
 	fmt.Println("username has been set")
@@ -52,11 +59,18 @@ func handlerRegister(s *state, cmd command) error {
 	if len(cmd.commandArgs) == 0 {
 		return errors.New("No username was provided")
 	}
-	newUser := database.CreateUserParams{ID: uuid.New(), CreatedAt: time.Now(), UpdatedAt: time.Now(), Name: cmd.commandArgs[0]}
-	_, err := s.dbConn.CreateUser(context.Background(), newUser)
+	username := cmd.commandArgs[0]
+	newUser := database.CreateUserParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		Name:      username,
+	}
+	registeredUser, err := s.dbConn.CreateUser(context.Background(), newUser)
 	if err != nil {
 		fmt.Printf("error occurred creating new user in DB: %v\n", err)
 		os.Exit(1)
 	}
+	s.ConfPointer.SetUser(registeredUser.Name)
 	return nil
 }
