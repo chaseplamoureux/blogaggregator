@@ -20,7 +20,7 @@ func main() {
 
 	argsWithoutProg := os.Args[1:]
 
-	if len(argsWithoutProg) <= 1 {
+	if len(argsWithoutProg) < 1 {
 		fmt.Println("Not enough arguments provided")
 		os.Exit(1)
 	}
@@ -49,9 +49,11 @@ func main() {
 
 	registeredCommands.register("register", handlerRegister)
 
+	registeredCommands.register("reset", handlerReset)
+
 	err = registeredCommands.run(&currentState, userCommand)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 
 }

@@ -74,3 +74,14 @@ func handlerRegister(s *state, cmd command) error {
 	s.ConfPointer.SetUser(registeredUser.Name)
 	return nil
 }
+
+func handlerReset(s *state, cmd command) error {
+	err := s.dbConn.DeleteUsers(context.Background())
+	if err != nil {
+		fmt.Printf("Error occurred deleting users from table\n")
+		return err
+	}
+
+	fmt.Println("Users table has been reset")
+	return nil
+}
