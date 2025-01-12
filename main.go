@@ -51,6 +51,8 @@ func main() {
 
 	registeredCommands.register("reset", handlerReset)
 
+	registeredCommands.register("users", handlerGetUsers)
+
 	err = registeredCommands.run(&currentState, userCommand)
 	if err != nil {
 		log.Fatal(err)

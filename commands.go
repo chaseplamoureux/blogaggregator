@@ -85,3 +85,19 @@ func handlerReset(s *state, cmd command) error {
 	fmt.Println("Users table has been reset")
 	return nil
 }
+
+func handlerGetUsers(s *state, cmd command) error {
+	users, err := s.dbConn.GetUsers(context.Background())
+	if err != nil {
+		return err
+	}
+
+	for _, user := range users {
+		if user == s.ConfPointer.Username {
+			fmt.Printf("* %s (current)\n", user)
+		} else {
+			fmt.Printf("* %s\n", user)
+		}
+	}
+	return nil
+}
