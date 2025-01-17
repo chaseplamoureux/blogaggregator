@@ -101,3 +101,18 @@ func handlerGetUsers(s *state, cmd command) error {
 	}
 	return nil
 }
+
+func handlerAgg(s *state, cmd command) error {
+	// if len(cmd.commandArgs) == 0 {
+	// 	return errors.New("No feed URL was provided")
+	// }
+	// url := cmd.commandArgs[0]
+	url := "https://www.wagslane.dev/index.xml"
+	rssFeed, err := fetchFeed(context.Background(), url)
+	if err != nil {
+		return fmt.Errorf("Error: %v", err)
+	}
+
+	fmt.Printf("%v\n", rssFeed)
+	return nil
+}

@@ -53,6 +53,8 @@ func main() {
 
 	registeredCommands.register("users", handlerGetUsers)
 
+	registeredCommands.register("agg", handlerAgg)
+
 	err = registeredCommands.run(&currentState, userCommand)
 	if err != nil {
 		log.Fatal(err)
