@@ -116,3 +116,43 @@ func handlerAgg(s *state, cmd command) error {
 	fmt.Printf("%v\n", rssFeed)
 	return nil
 }
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.commandArgs) != 2 {
+		return fmt.Errorf("Invalid number of required arguments")
+	}
+
+	currentUsername := s.ConfPointer.Username
+	currentuser, err := s.dbConn.GetUser(context.Background(), currentUsername)
+	if err != nil {
+		return fmt.Errorf("User not found")
+	}
+
+	newFeed := database.CreateFeedParams{
+		ID:        uuid.New(),
+		Name:      cmd.commandArgs[0],
+		Url:       cmd.commandArgs[1],
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		UserID:    currentuser.ID,
+	}
+
+	feed, err := s.dbConn.CreateFeed(context.Background(), newFeed)
+	if err != nil {
+		return fmt.Errorf("Error writing feed to DB: %v", err)
+	}
+
+	fmt.Println("Feed added to DB")
+	printFeed(feed)
+	return nil
+
+}
+
+func printFeed(feed database.Feed) {
+	fmt.Printf("* ID:              %s\n", feed.ID)
+	fmt.Printf("* Name:            %s\n", feed.Name)
+	fmt.Printf("* URL:             %s\n", feed.Url)
+	fmt.Printf("* Created:         %v\n", feed.CreatedAt)
+	fmt.Printf("* Updated:         %v\n", feed.UpdatedAt)
+	fmt.Printf("* UserID:          %s\n", feed.UserID)
+}
