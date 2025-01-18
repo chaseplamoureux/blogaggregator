@@ -57,6 +57,8 @@ func main() {
 
 	registeredCommands.register("addfeed", handlerAddFeed)
 
+	registeredCommands.register("feeds", handlerFeeds)
+
 	err = registeredCommands.run(&currentState, userCommand)
 	if err != nil {
 		log.Fatal(err)

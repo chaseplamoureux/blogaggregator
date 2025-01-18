@@ -156,3 +156,25 @@ func printFeed(feed database.Feed) {
 	fmt.Printf("* Updated:         %v\n", feed.UpdatedAt)
 	fmt.Printf("* UserID:          %s\n", feed.UserID)
 }
+
+func handlerFeeds(s *state, cmd command) error {
+
+	feeds, err := s.dbConn.GetFeeds(context.Background())
+	if err != nil {
+		return err
+	}
+
+	for _, feed := range feeds {
+		user, err := s.dbConn.GetUserByID(context.Background(), feed.UserID)
+		if err != nil {
+			return err
+		}
+		fmt.Println("----------")
+		fmt.Printf("%s\n", feed.Name)
+		fmt.Printf("%s\n", feed.Url)
+		fmt.Printf("%s\n", user.Name)
+		fmt.Println("----------")
+		fmt.Println("")
+	}
+	return nil
+}
