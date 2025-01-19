@@ -117,16 +117,11 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.commandArgs) != 2 {
 		return fmt.Errorf("Invalid number of required arguments")
 	}
 
-	currentUsername := s.ConfPointer.Username
-	currentuser, err := s.dbConn.GetUser(context.Background(), currentUsername)
-	if err != nil {
-		return fmt.Errorf("User not found")
-	}
 
 	newFeed := database.CreateFeedParams{
 		ID:        uuid.New(),
@@ -134,7 +129,7 @@ func handlerAddFeed(s *state, cmd command) error {
 		Url:       cmd.commandArgs[1],
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
-		UserID:    currentuser.ID,
+		UserID:    user.ID,
 	}
 
 	feed, err := s.dbConn.CreateFeed(context.Background(), newFeed)
@@ -149,7 +144,7 @@ func handlerAddFeed(s *state, cmd command) error {
 		ID:        uuid.New(),
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
-		UserID:    currentuser.ID,
+		UserID:    user.ID,
 		FeedID:    feed.ID,
 	}
 	_, err = s.dbConn.CreateFeedFollow(context.Background(), feedFollowParams)
@@ -191,17 +186,11 @@ func handlerFeeds(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.commandArgs) != 1 {
 		return fmt.Errorf("Wrong number of arguments provided")
 	}
 
-	// get user details
-	currentUser := s.ConfPointer.Username
-	currentUserInfo, err := s.dbConn.GetUser(context.Background(), currentUser)
-	if err != nil {
-		return fmt.Errorf("User not found")
-	}
 
 	//get feed details
 	feedInfo, err := s.dbConn.GetFeedByURL(context.Background(), cmd.commandArgs[0])
@@ -213,7 +202,7 @@ func handlerFollow(s *state, cmd command) error {
 		ID:        uuid.New(),
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
-		UserID:    currentUserInfo.ID,
+		UserID:    user.ID,
 		FeedID:    feedInfo.ID,
 	}
 	result, err := s.dbConn.CreateFeedFollow(context.Background(), feedFollowParams)
@@ -227,13 +216,9 @@ func handlerFollow(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
-	currentUser := s.ConfPointer.Username
-	currentUserInfo, err := s.dbConn.GetUser(context.Background(), currentUser)
-	if err != nil {
-		return fmt.Errorf("User not found")
-	}
-	result, err := s.dbConn.GetFeedFollowsForUser(context.Background(), currentUserInfo.ID)
+func handlerFollowing(s *state, cmd command, user database.User) error {
+
+	result, err := s.dbConn.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err != nil {
 		return fmt.Errorf("Error getting feeds by user %v", err)
 	}
@@ -243,7 +228,7 @@ func handlerFollowing(s *state, cmd command) error {
 		return nil
 	}
 
-	fmt.Printf("User: %v following feeds:\n", currentUserInfo.Name)
+	fmt.Printf("User: %v following feeds:\n", user.Name)
 	for _, feed := range result {
 		fmt.Printf("%v\n", feed.FeedName)
 	}

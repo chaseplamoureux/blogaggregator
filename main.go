@@ -55,13 +55,13 @@ func main() {
 
 	registeredCommands.register("agg", handlerAgg)
 
-	registeredCommands.register("addfeed", handlerAddFeed)
+	registeredCommands.register("addfeed", middlewareLoggedIn(handlerAddFeed))
 
 	registeredCommands.register("feeds", handlerFeeds)
 
-	registeredCommands.register("follow", handlerFollow)
+	registeredCommands.register("follow", middlewareLoggedIn(handlerFollow))
 
-	registeredCommands.register("following", handlerFollowing)
+	registeredCommands.register("following", middlewareLoggedIn(handlerFollowing))
 
 	err = registeredCommands.run(&currentState, userCommand)
 	if err != nil {
