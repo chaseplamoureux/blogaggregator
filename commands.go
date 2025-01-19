@@ -122,7 +122,6 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 		return fmt.Errorf("Invalid number of required arguments")
 	}
 
-
 	newFeed := database.CreateFeedParams{
 		ID:        uuid.New(),
 		Name:      cmd.commandArgs[0],
@@ -191,7 +190,6 @@ func handlerFollow(s *state, cmd command, user database.User) error {
 		return fmt.Errorf("Wrong number of arguments provided")
 	}
 
-
 	//get feed details
 	feedInfo, err := s.dbConn.GetFeedByURL(context.Background(), cmd.commandArgs[0])
 	if err != nil {
@@ -233,5 +231,23 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 		fmt.Printf("%v\n", feed.FeedName)
 	}
 
+	return nil
+}
+
+func handlerUnfollow(s *state, cmd command, user database.User) error {
+	if len(cmd.commandArgs) != 1 {
+		return fmt.Errorf("Incorrect number of arguments provided")
+	}
+
+	feedDetails, err := s.dbConn.GetFeedByURL(context.Background(), cmd.commandArgs[0])
+	if err != nil {
+		return fmt.Errorf("Error getting feed details: %v\n", err)
+	}
+
+	err = s.dbConn.UnfollowFeed(context.Background(), database.UnfollowFeedParams{UserID: user.ID, FeedID: feedDetails.ID})
+	if err != nil {
+		return fmt.Errorf("Error unfollowing feed: %v\n", err)
+	}
+	fmt.Printf("User %v has unfollowed %v\n", user.Name, feedDetails.Url)
 	return nil
 }
