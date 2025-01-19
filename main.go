@@ -59,6 +59,10 @@ func main() {
 
 	registeredCommands.register("feeds", handlerFeeds)
 
+	registeredCommands.register("follow", handlerFollow)
+
+	registeredCommands.register("following", handlerFollowing)
+
 	err = registeredCommands.run(&currentState, userCommand)
 	if err != nil {
 		log.Fatal(err)
