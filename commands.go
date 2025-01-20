@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
@@ -103,17 +104,26 @@ func handlerGetUsers(s *state, cmd command) error {
 }
 
 func handlerAgg(s *state, cmd command) error {
-	// if len(cmd.commandArgs) == 0 {
-	// 	return errors.New("No feed URL was provided")
-	// }
-	// url := cmd.commandArgs[0]
-	url := "https://www.wagslane.dev/index.xml"
-	rssFeed, err := fetchFeed(context.Background(), url)
-	if err != nil {
-		return fmt.Errorf("Error: %v", err)
+	if len(cmd.commandArgs) != 1 {
+		return errors.New("No polling interval was provided")
 	}
 
-	fmt.Printf("%v\n", rssFeed)
+	pollingInterval, err := time.ParseDuration(cmd.commandArgs[0])
+	if err != nil {
+		return fmt.Errorf("Error parsing polling interval ensure it is in correct format 1s, 1m, 1h")
+	}
+
+	ticker := time.NewTicker(pollingInterval)
+	for ; ; <-ticker.C {
+		scrapeFeeds(s)
+	}
+	// url := "https://www.wagslane.dev/index.xml"
+	// rssFeed, err := fetchFeed(context.Background(), url)
+	// if err != nil {
+	// 	return fmt.Errorf("Error: %v", err)
+	// }
+
+	// fmt.Printf("%v\n", rssFeed)
 	return nil
 }
 
@@ -249,5 +259,30 @@ func handlerUnfollow(s *state, cmd command, user database.User) error {
 		return fmt.Errorf("Error unfollowing feed: %v\n", err)
 	}
 	fmt.Printf("User %v has unfollowed %v\n", user.Name, feedDetails.Url)
+	return nil
+}
+
+func scrapeFeeds(s *state) error {
+	nextFeed, err := s.dbConn.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		return fmt.Errorf("Error getting next feed to fetch: %v\n", err)
+	}
+	err = s.dbConn.MarkFeedFetched(context.Background(), database.MarkFeedFetchedParams{
+		ID:        nextFeed.ID,
+		UpdatedAt: time.Now().UTC(),
+		LastFetchedAt: sql.NullTime{
+			Time:  time.Now().UTC(),
+			Valid: true}})
+	if err != nil {
+		return fmt.Errorf("Error marking feed as fetched")
+	}
+
+	rssFeed, err := fetchFeed(context.Background(), nextFeed.Url)
+	if err != nil {
+		return fmt.Errorf("Error getting next feed from source: %v\n", err)
+	}
+	for _, item := range rssFeed.Channel.Item {
+		fmt.Printf("Feed Title: %v\n", item.Title)
+	}
 	return nil
 }

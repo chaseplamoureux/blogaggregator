@@ -40,6 +40,7 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	if err != nil {
 		return &RSSFeed{}, fmt.Errorf("Error occurred during http request: %v", err)
 	}
+	fmt.Printf("RSSFeed retreived with status code: %v\n", resp.StatusCode)
 	defer resp.Body.Close()
 
 	xmlData, err := io.ReadAll(resp.Body)
