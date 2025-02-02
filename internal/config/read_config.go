@@ -30,7 +30,7 @@ func Read() (Config, error) {
 
 	err = json.Unmarshal(configFileData, &gatorConfig)
 	if err != nil {
-		return Config{}, fmt.Errorf("Error parsing json", err)
+		return Config{}, fmt.Errorf("error parsing json %v", err)
 	}
 
 	return gatorConfig, nil
@@ -47,13 +47,13 @@ func (conf *Config) SetUser(username string) {
 func write(conf Config) error {
 	data, err := json.Marshal(conf)
 	if err != nil {
-		return fmt.Errorf("error parsing config to json", err)
+		return fmt.Errorf("error parsing config to json %v", err)
 	}
 
 	path := getConfigFilePath()
 	err = os.WriteFile(path, data, 0644)
 	if err != nil {
-		return fmt.Errorf("error writing file", err)
+		return fmt.Errorf("error writing file %v", err)
 	}
 	return nil
 }

@@ -29,7 +29,7 @@ func (c *commands) register(name string, f func(*state, command) error) {
 func (c *commands) run(s *state, cmd command) error {
 	f, exists := c.commandsMap[cmd.commandName]
 	if !exists {
-		return fmt.Errorf("Command not found %s", cmd.commandName)
+		return fmt.Errorf("command not found %s", cmd.commandName)
 	}
 	err := f(s, cmd)
 	if err != nil {
@@ -41,7 +41,7 @@ func (c *commands) run(s *state, cmd command) error {
 
 func handlerLogin(s *state, cmd command) error {
 	if len(cmd.commandArgs) == 0 {
-		return errors.New("No username was provided")
+		return errors.New("no username was provided")
 	}
 
 	username := cmd.commandArgs[0]
@@ -59,7 +59,7 @@ func handlerLogin(s *state, cmd command) error {
 
 func handlerRegister(s *state, cmd command) error {
 	if len(cmd.commandArgs) == 0 {
-		return errors.New("No username was provided")
+		return errors.New("no username was provided")
 	}
 	username := cmd.commandArgs[0]
 	newUser := database.CreateUserParams{
@@ -106,12 +106,12 @@ func handlerGetUsers(s *state, cmd command) error {
 
 func handlerAgg(s *state, cmd command) error {
 	if len(cmd.commandArgs) != 1 {
-		return errors.New("No polling interval was provided")
+		return errors.New("no polling interval was provided")
 	}
 
 	pollingInterval, err := time.ParseDuration(cmd.commandArgs[0])
 	if err != nil {
-		return fmt.Errorf("Error parsing polling interval ensure it is in correct format 1s, 1m, 1h")
+		return fmt.Errorf("error parsing polling interval ensure it is in correct format 1s, 1m, 1h")
 	}
 
 	ticker := time.NewTicker(pollingInterval)
@@ -121,19 +121,11 @@ func handlerAgg(s *state, cmd command) error {
 			return err
 		}
 	}
-	// url := "https://www.wagslane.dev/index.xml"
-	// rssFeed, err := fetchFeed(context.Background(), url)
-	// if err != nil {
-	// 	return fmt.Errorf("Error: %v", err)
-	// }
-
-	// fmt.Printf("%v\n", rssFeed)
-	return nil
 }
 
 func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.commandArgs) != 2 {
-		return fmt.Errorf("Invalid number of required arguments")
+		return fmt.Errorf("invalid number of required arguments")
 	}
 
 	newFeed := database.CreateFeedParams{
@@ -147,7 +139,7 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 
 	feed, err := s.dbConn.CreateFeed(context.Background(), newFeed)
 	if err != nil {
-		return fmt.Errorf("Error writing feed to DB: %v", err)
+		return fmt.Errorf("error writing feed to DB: %v", err)
 	}
 
 	fmt.Println("Feed added to DB")
@@ -201,13 +193,13 @@ func handlerFeeds(s *state, cmd command) error {
 
 func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.commandArgs) != 1 {
-		return fmt.Errorf("Wrong number of arguments provided")
+		return fmt.Errorf("wrong number of arguments provided")
 	}
 
 	//get feed details
 	feedInfo, err := s.dbConn.GetFeedByURL(context.Background(), cmd.commandArgs[0])
 	if err != nil {
-		return fmt.Errorf("Error retreiving feed %v", err)
+		return fmt.Errorf("error retreiving feed %v", err)
 	}
 
 	feedFollowParams := database.CreateFeedFollowParams{
@@ -219,7 +211,7 @@ func handlerFollow(s *state, cmd command, user database.User) error {
 	}
 	result, err := s.dbConn.CreateFeedFollow(context.Background(), feedFollowParams)
 	if err != nil {
-		return fmt.Errorf("Failed at creating feed follow row %v", err)
+		return fmt.Errorf("failed at creating feed follow row %v", err)
 	}
 
 	fmt.Printf("Feed name: %v\n", result.FeedName)
@@ -232,7 +224,7 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 
 	result, err := s.dbConn.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err != nil {
-		return fmt.Errorf("Error getting feeds by user %v", err)
+		return fmt.Errorf("error getting feeds by user %v", err)
 	}
 
 	if len(result) == 0 {
@@ -250,17 +242,17 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 
 func handlerUnfollow(s *state, cmd command, user database.User) error {
 	if len(cmd.commandArgs) != 1 {
-		return fmt.Errorf("Incorrect number of arguments provided")
+		return fmt.Errorf("incorrect number of arguments provided")
 	}
 
 	feedDetails, err := s.dbConn.GetFeedByURL(context.Background(), cmd.commandArgs[0])
 	if err != nil {
-		return fmt.Errorf("Error getting feed details: %v\n", err)
+		return fmt.Errorf("error getting feed details: %v", err)
 	}
 
 	err = s.dbConn.UnfollowFeed(context.Background(), database.UnfollowFeedParams{UserID: user.ID, FeedID: feedDetails.ID})
 	if err != nil {
-		return fmt.Errorf("Error unfollowing feed: %v\n", err)
+		return fmt.Errorf("error unfollowing feed: %v", err)
 	}
 	fmt.Printf("User %v has unfollowed %v\n", user.Name, feedDetails.Url)
 	return nil
@@ -269,7 +261,7 @@ func handlerUnfollow(s *state, cmd command, user database.User) error {
 func scrapeFeeds(s *state) error {
 	nextFeed, err := s.dbConn.GetNextFeedToFetch(context.Background())
 	if err != nil {
-		return fmt.Errorf("Error getting next feed to fetch: %v\n", err)
+		return fmt.Errorf("error getting next feed to fetch: %v", err)
 	}
 	err = s.dbConn.MarkFeedFetched(context.Background(), database.MarkFeedFetchedParams{
 		ID:        nextFeed.ID,
@@ -278,12 +270,12 @@ func scrapeFeeds(s *state) error {
 			Time:  time.Now().UTC(),
 			Valid: true}})
 	if err != nil {
-		return fmt.Errorf("Error marking feed as fetched")
+		return fmt.Errorf("error marking feed as fetched")
 	}
 
 	rssFeed, err := fetchFeed(context.Background(), nextFeed.Url)
 	if err != nil {
-		return fmt.Errorf("Error getting next feed from source: %v\n", err)
+		return fmt.Errorf("error getting next feed from source: %v", err)
 	}
 	for _, item := range rssFeed.Channel.Item {
 		parsedTime, err := formatRSSFeedPubDate(item.PubDate)
@@ -315,7 +307,7 @@ func formatRSSFeedPubDate(date string) (time.Time, error) {
 
 	parsedTime, err := time.Parse(pub_format, date)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("Error parsing pubDate into valid time: %v", err)
+		return time.Time{}, fmt.Errorf("error parsing pubDate into valid time: %v", err)
 	}
 
 	return parsedTime, nil

@@ -38,6 +38,9 @@ func main() {
 	currentState := state{ConfPointer: &conf}
 
 	db, err := sql.Open("postgres", currentState.ConfPointer.DB_URL)
+	if err != nil {
+		log.Fatalf("could not connect to database")
+	}
 
 	dbQueries := database.New(db)
 

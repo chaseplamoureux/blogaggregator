@@ -38,17 +38,20 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return &RSSFeed{}, fmt.Errorf("Error occurred during http request: %v", err)
+		return &RSSFeed{}, fmt.Errorf("error occurred during http request: %v", err)
 	}
 	fmt.Printf("RSSFeed retreived with status code: %v\n", resp.StatusCode)
 	defer resp.Body.Close()
 
 	xmlData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading data %v", err)
+	}
 
 	rss := &RSSFeed{}
 	err = xml.Unmarshal(xmlData, &rss)
 	if err != nil {
-		return &RSSFeed{}, fmt.Errorf("Error Decoding xml %v", err)
+		return &RSSFeed{}, fmt.Errorf("error Decoding xml %v", err)
 	}
 
 	rss.Channel.Title = html.UnescapeString(rss.Channel.Title)
