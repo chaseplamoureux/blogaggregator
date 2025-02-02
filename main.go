@@ -14,6 +14,7 @@ import (
 type state struct {
 	ConfPointer *config.Config
 	dbConn      *database.Queries
+	Commands	*commands
 }
 
 func main() {
@@ -48,6 +49,8 @@ func main() {
 
 	registeredCommands := commands{commandsMap: make(map[string]func(*state, command) error)}
 
+	currentState.Commands = &registeredCommands
+
 	registeredCommands.register("login", handlerLogin)
 
 	registeredCommands.register("register", handlerRegister)
@@ -69,6 +72,9 @@ func main() {
 	registeredCommands.register("unfollow", middlewareLoggedIn(handlerUnfollow))
 
 	registeredCommands.register("browse", middlewareLoggedIn(handlerBrowse))
+
+	registeredCommands.register("help", handlerHelp)
+
 
 	err = registeredCommands.run(&currentState, userCommand)
 	if err != nil {

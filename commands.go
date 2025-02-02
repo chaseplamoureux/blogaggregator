@@ -341,3 +341,13 @@ func handlerBrowse(s *state, cmd command, user database.User) error {
 	}
 	return nil
 }
+
+func handlerHelp(state *state, cmd command) error {
+	fmt.Println("List of available commands:")
+	for cmdName := range state.Commands.commandsMap {
+		fmt.Println(cmdName)
+	}
+	return nil
+}
+
+
