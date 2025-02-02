@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/chaseplamoureux/blogaggregator/internal/database"
@@ -115,7 +116,10 @@ func handlerAgg(s *state, cmd command) error {
 
 	ticker := time.NewTicker(pollingInterval)
 	for ; ; <-ticker.C {
-		scrapeFeeds(s)
+		err = scrapeFeeds(s)
+		if err != nil {
+			return err
+		}
 	}
 	// url := "https://www.wagslane.dev/index.xml"
 	// rssFeed, err := fetchFeed(context.Background(), url)
@@ -282,7 +286,66 @@ func scrapeFeeds(s *state) error {
 		return fmt.Errorf("Error getting next feed from source: %v\n", err)
 	}
 	for _, item := range rssFeed.Channel.Item {
+		parsedTime, err := formatRSSFeedPubDate(item.PubDate)
+		if err != nil {
+			return err
+		}
+
 		fmt.Printf("Feed Title: %v\n", item.Title)
+		postParams := database.CreatePostParams{
+			ID:          uuid.New(),
+			CreatedAt:   time.Now().UTC(),
+			UpdatedAt:   time.Now().UTC(),
+			Title:       item.Title,
+			Url:         item.Link,
+			Description: item.Description,
+			PublishedAt: parsedTime,
+			FeedID:      nextFeed.ID,
+		}
+		_, err = s.dbConn.CreatePost(context.Background(), postParams)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	return nil
+}
+
+func formatRSSFeedPubDate(date string) (time.Time, error) {
+	pub_format := "Mon, 02 Jan 2006 15:04:05 -0700"
+
+	parsedTime, err := time.Parse(pub_format, date)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("Error parsing pubDate into valid time: %v", err)
+	}
+
+	return parsedTime, nil
+}
+
+func handlerBrowse(s *state, cmd command, user database.User) error {
+	defaultLimit := 2
+
+	if len(cmd.commandArgs) == 1 {
+		if limit, err := strconv.Atoi(cmd.commandArgs[0]); err == nil {
+			defaultLimit = limit
+		} else {
+			return fmt.Errorf("limit provided is not a number: %v", err)
+		}
+
+	}
+
+	posts, err := s.dbConn.GetPostsByUser(context.Background(), database.GetPostsByUserParams{ID: user.ID, Limit: int32(defaultLimit)})
+	if err != nil {
+		return err
+	}
+
+	for _, post := range posts {
+		fmt.Println("-----------------------")
+		fmt.Printf("Title: %s\n", post.Title)
+		fmt.Printf("Description: %s\n", post.Description)
+		fmt.Printf("URL: %s\n", post.Url)
+		fmt.Printf("Publication Date: %v\n", post.PublishedAt)
+		fmt.Println("-----------------------")
+		fmt.Println("")
 	}
 	return nil
 }

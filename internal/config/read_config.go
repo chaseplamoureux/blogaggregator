@@ -23,7 +23,7 @@ func Read() (Config, error) {
 	path := getConfigFilePath()
 	configFileData, err := os.ReadFile(path)
 	if err != nil {
-		return Config{}, fmt.Errorf("Error reading gatorconfig file", err)
+		return Config{}, fmt.Errorf("error reading gatorconfig file %v", err)
 	}
 
 	gatorConfig := Config{}

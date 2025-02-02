@@ -65,6 +65,8 @@ func main() {
 
 	registeredCommands.register("unfollow", middlewareLoggedIn(handlerUnfollow))
 
+	registeredCommands.register("browse", middlewareLoggedIn(handlerBrowse))
+
 	err = registeredCommands.run(&currentState, userCommand)
 	if err != nil {
 		log.Fatal(err)
